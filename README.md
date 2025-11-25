@@ -60,7 +60,7 @@ HCO-Quant/
 4. Start the FastAPI server:
 
    ```bash
-   uvicorn hco_quant_api:app --reload
+  uvicorn hco_quant_api:app --host 127.0.0.1 --port 8000 --reload
    ```
 
 ### Frontend
