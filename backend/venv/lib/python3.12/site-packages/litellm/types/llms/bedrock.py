@@ -679,11 +679,10 @@ class BedrockInputDataConfig(TypedDict):
     s3InputDataConfig: BedrockS3InputDataConfig
 
 
-class BedrockS3OutputDataConfig(TypedDict, total=False):
+class BedrockS3OutputDataConfig(TypedDict):
     """S3 output data configuration for Bedrock batch jobs."""
 
     s3Uri: str
-    s3EncryptionKeyId: Optional[str]
 
 
 class BedrockOutputDataConfig(TypedDict):

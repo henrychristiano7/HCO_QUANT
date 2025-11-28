@@ -1,0 +1,6 @@
+echo "venv/" >> .gitignore
+echo "__pycache__/" >> .gitignore
+echo "*.pyc" >> .gitignore
+echo ".env" >> .gitignore  # CRITICAL: Keeps your API keys private
+echo "*.json" >> .gitignore # If trade_history.json is inside the backend, ignore it
+echo "data/history/trade_history.json" >> .gitignore
