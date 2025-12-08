@@ -118,6 +118,9 @@ def decide_signal(
 def generate_latest_signal(df: pd.DataFrame) -> Dict[str, Any]:
     """
     Generates the latest trading signal and commentary based on the provided data.
+    
+    The output price ('latest_close') is explicitly cast to a standard Python float 
+    to prevent serialization/rendering errors in downstream asynchronous layers.
     """
     
     df_enhanced = compute_indicators(df)
@@ -161,6 +164,7 @@ def generate_latest_signal(df: pd.DataFrame) -> Dict[str, Any]:
         "action": signal,
         "AI_Confidence": confidence,
         "ai_comment": comment,
-        "latest_close": last['Close'],
+        # CRITICAL FIX: Ensure price is a standard Python float before it leaves this function
+        "latest_close": float(last['Close']), 
         "latest_date": str(last['Date']), 
     }

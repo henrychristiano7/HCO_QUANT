@@ -1,0 +1,10 @@
+fastapi==0.121.1
+uvicorn==0.15.0  # Or the latest version you had installed, check your logs
+pydantic==2.12.4
+python-dotenv==1.2.1
+requests==2.32.5
+pandas
+numpy
+matplotlib
+yfinance
+openpyxl

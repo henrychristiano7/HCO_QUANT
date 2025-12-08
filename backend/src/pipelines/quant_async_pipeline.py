@@ -1,17 +1,18 @@
-# src/pipelines/quant_async_pipeline.py
+# src/pipelines/quant_async_pipeline.py (FINAL COMPLETE VERSION - Syntax Fix)
 
 import asyncio
 import random
 import datetime
 import pandas as pd
 from typing import List, Dict, Any, Union
+import numpy as np # Added for robust type checking/conversion in HTML rendering
 
 # Import external components from the 'src' package
 from src.agents import report_agent
 from src.agents import strategy_agent
 from src.agents import financial_data_agent 
 from src.utils import mock_data 
-from src.agents import ai_agent # CRITICAL: Need AI Agent here to generate commentary
+from src.agents import ai_agent 
 
 # ----------------------------------------------------------------------
 # Async Pipeline Step: Process Single Asset
@@ -20,18 +21,6 @@ from src.agents import ai_agent # CRITICAL: Need AI Agent here to generate comme
 async def process_asset_pipeline(symbol: str, use_mock_data: bool = False, include_commentary: bool = False) -> Dict[str, Any]:
     """
     Asynchronously executes the full quantitative analysis pipeline for one symbol.
-    1. Fetches data (real or mock).
-    2. Computes the signal.
-    3. Generates LLM commentary (if requested).
-    4. Saves the complete entry to history.
-    
-    Args:
-        symbol: The stock ticker symbol.
-        use_mock_data: If True, uses randomized mock data.
-        include_commentary: If True, calls the AI agent for detailed commentary.
-        
-    Returns:
-        A dictionary containing the complete signal data.
     """
     
     # Simulate network/database latency if using real data
@@ -40,10 +29,8 @@ async def process_asset_pipeline(symbol: str, use_mock_data: bool = False, inclu
     
     # 1. FETCH Data (Conditional Logic)
     if use_mock_data:
-        # Use mock data utility for dynamic, randomized testing. 
         historical_df_result = mock_data.generate_mock_ohlcv(symbol, days=60, interval_hours=6)
     else:
-        # Use the real financial data agent
         historical_df_result = financial_data_agent.get_historical_data(symbol)
 
     # Handle data fetching errors
@@ -68,17 +55,33 @@ async def process_asset_pipeline(symbol: str, use_mock_data: bool = False, inclu
     signal_data['Symbol'] = symbol_upper
     signal_data['data_source'] = "MOCK" if use_mock_data else "REAL"
 
-    # 3. GENERATE LLM Commentary (CRITICAL STEP)
+    # 3. GENERATE LLM Commentary (Concurrency Fix applied)
     if include_commentary:
-        # The AI agent is called here, ensuring the data is added before reporting
+        
+        # Extract primitive arguments for the thread-safe synchronous call
+        symbol_arg = signal_data.get('Symbol')
+        signal_arg = signal_data.get('action') # Use 'action' for the signal value
+        confidence_arg = signal_data.get('AI_Confidence') 
+        rationale_arg = signal_data.get('ai_comment')
+        close_arg = signal_data.get('latest_close')
+        
         try:
-            llm_commentary = await ai_agent.generate_trade_comment(signal_data)
+            # FIX: Use asyncio.to_thread to run the synchronous ai_agent function.
+            llm_commentary = await asyncio.to_thread(
+                ai_agent.generate_trade_comment, 
+                symbol_arg,
+                signal_arg,
+                confidence_arg,
+                rationale_arg,
+                close_arg
+            )
             signal_data['llm_commentary'] = llm_commentary
+            
         except Exception as e:
+            # Capture the error gracefully
             signal_data['llm_commentary_error'] = f"LLM generation failed: {e.__class__.__name__}"
     
     # 4. LOG Decision (using the Report Agent)
-    # The signal_data dictionary now contains ALL fields (including llm_commentary, if generated)
     history_entry = report_agent.process_latest_signal(symbol_upper, signal_data)
     report_agent.save_history_entry(history_entry)
 
@@ -116,7 +119,7 @@ async def generate_dashboard_html(symbols: str, use_mock_data: bool = False, inc
 # ----------------------------------------------------------------------
 
 def generate_html_template(results: List[Dict[str, Any]]) -> str:
-    """Creates the HTML string from the analysis results."""
+    """Creates the HTML string from the analysis results, applying necessary formatting."""
     def get_color(signal):
         if signal == "BUY": return "green"
         if signal == "SELL": return "red"
@@ -157,18 +160,25 @@ def generate_html_template(results: List[Dict[str, Any]]) -> str:
     """
 
     for d in results:
-        color_class = get_color(d.get('Signal'))
+        # PULL CORRECT SIGNAL: Fixes the 'stuck on HOLD' bug
+        signal = d.get('action', 'HOLD')
+        color_class = get_color(signal)
         
-        # Pull data, defaulting to ensure no NameErrors in the HTML loop
+        # Pull data
         symbol = d.get('Symbol', 'N/A')
-        close = d.get('Close', 'N/A')
-        signal = d.get('Signal', 'HOLD')
         confidence = d.get('AI_Confidence', '0%')
         
+        # CRITICAL FIX: Robustly format the 'Close' price
+        close_value = d.get('latest_close') # Use 'latest_close' key from the strategy agent output
+        try:
+            # Use float() to convert ANY numeric type (Python or NumPy) to a standard float
+            close = f"{float(close_value):.2f}"
+        except Exception:
+            close = 'N/A' # Default if conversion fails
+            
         # Display either the full LLM commentary or the error message/empty
         llm_text = d.get('llm_commentary', '') or d.get('llm_commentary_error', '') or 'N/A (Not Requested)'
         
-        # Use the shorter, emoji-based quant rationale for the table display
         quant_rationale = d.get('ai_comment', 'No Comment')
         source = d.get('data_source', 'N/A')
 

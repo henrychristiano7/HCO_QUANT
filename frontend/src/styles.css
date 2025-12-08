@@ -1,0 +1,55 @@
+/* src/styles.css - Basic Global Styling */
+
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap');
+
+body {
+    margin: 0;
+    font-family: 'Roboto', sans-serif;
+    background-color: #f4f7fb; /* Light background matching backend output */
+    color: #333;
+}
+
+#root {
+    padding: 20px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* --- Utility Classes for Dashboard --- */
+
+.container {
+    background: #ffffff;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.title {
+    color: #0074D9; /* Primary blue color */
+    text-align: center;
+    margin-bottom: 30px;
+    font-weight: 700;
+}
+
+/* Button Styling */
+.btn-primary {
+    background-color: #0074D9;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: background-color 0.2s;
+}
+
+.btn-primary:hover {
+    background-color: #005bb5;
+}
+
+.input-field {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    width: 100%;
+}

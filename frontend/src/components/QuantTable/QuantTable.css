@@ -1,0 +1,54 @@
+/* src/components/QuantTable/QuantTable.css */
+
+.quant-table-container {
+    overflow-x: auto;
+}
+
+.quant-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.quant-table th, .quant-table td {
+    padding: 12px 15px;
+    text-align: center;
+    border-bottom: 1px solid #eee;
+    font-size: 0.9em;
+}
+
+.quant-table thead th {
+    background-color: #0074D9;
+    color: white;
+    font-weight: 700;
+}
+
+.quant-table tbody tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+/* Conditional Colors */
+.signal-cell {
+    font-weight: bold;
+    text-shadow: 0 0 1px rgba(0, 0, 0, 0.2);
+}
+
+.signal-cell.green {
+    color: #00c853; /* Bright Green */
+}
+
+.signal-cell.red {
+    color: #d50000; /* Bright Red */
+}
+
+.signal-cell.gray {
+    color: #888;
+}
+
+.rationale-cell, .commentary-cell {
+    text-align: left;
+    font-size: 0.85em;
+}

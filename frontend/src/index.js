@@ -1,18 +1,16 @@
-import React from "react";
-import ReactDOM from "react-dom/client";
-import SingleSymbol from "./components/SingleSymbol";
-import MultiSymbol from "./components/MultiSymbol";
+// src/index.js
 
-function App() {
-  return (
-    <div style={{ fontFamily: "Arial", padding: "20px" }}>
-      <h1>📊 HCO Quant Dashboard</h1>
-      <SingleSymbol />
-      <hr />
-      <MultiSymbol />
-    </div>
-  );
+import React from 'react';
+import { createRoot } from 'react-dom/client';
+import App from './App';
+
+const container = document.getElementById('root');
+if (container) {
+    const root = createRoot(container);
+    root.render(
+        <React.StrictMode>
+            <App />
+        </React.StrictMode>
+    );
 }
-
-const root = ReactDOM.createRoot(document.getElementById("root"));
-root.render(<App />);
+// Note: styles.css is linked in public/index.html

@@ -1,4 +1,4 @@
-# src/agents/threat_intel_agent.py
+# src/agents/threat_intel_agent.py (Corrected API Key Lookup)
 
 import os
 import requests
@@ -8,7 +8,8 @@ from typing import Dict, Any, Optional
 
 # --- Configuration & Setup ---
 load_dotenv()
-VT_API_KEY = os.getenv("VT_API_KEY")
+# CRITICAL FIX: Changed lookup key to match your .env file
+VT_API_KEY = os.getenv("VIRUSTOTAL_API_KEY") 
 
 # Use a specific exception for clearer error handling
 class VTAPIError(Exception):
@@ -17,8 +18,8 @@ class VTAPIError(Exception):
 def _get_vt_headers() -> Dict[str, str]:
     """Ensures API key is available and returns standard headers."""
     if not VT_API_KEY:
-        # Use the custom exception
-        raise VTAPIError("VirusTotal API key not configured (VT_API_KEY missing).")
+        # The error message is also updated to reflect the key name
+        raise VTAPIError("VirusTotal API key not configured (VIRUSTOTAL_API_KEY missing).")
     return {"x-apikey": VT_API_KEY}
 
 def _handle_vt_response(response: requests.Response) -> Dict[str, Any]:
@@ -65,13 +66,14 @@ def get_vt_url_report(url_to_check: str) -> Dict[str, Any]:
 
 # --- Example Usage ---
 if __name__ == '__main__':
-    print("\n--- Threat Intel Agent Test (Requires VT_API_KEY in .env) ---")
+    print("\n--- Threat Intel Agent Test (Requires VIRUSTOTAL_API_KEY in .env) ---")
     
     # Example Hash (A non-malicious Google hash)
-    test_hash = "275a560c50f83737b027d1421a71fb981f9b9dae" 
+    test_hash = "275a560c50f83737b027d1421a71fb981f9b9dae"  
     
     try:
         file_report = get_vt_file_report(test_hash)
+        # Note: If running this test, ensure you have sufficient VT quota
         print(f"Report for hash {test_hash[:10]}...: Success (Status: {file_report['data']['attributes']['last_analysis_stats']['malicious']} malicious)")
         
         # Example URL

@@ -1,14 +1,14 @@
 # src/api/hco_quant_api.py (Final Complete Version)
 
 from fastapi import FastAPI, Query, HTTPException, status
-from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, HTMLResponse, Response
+from fastapi.middleware.cors import CORSMiddleware
 import asyncio
 from dotenv import load_dotenv
 import os
 from typing import List, Dict, Any, Union
-import pandas as pd # Needed for DataFrame in export endpoint
-import io # Needed for BytesIO in export endpoint
+import pandas as pd 
+import io 
 
 # Import components from the new 'src' package structure
 # 1. Pipeline for Quant analysis
@@ -23,7 +23,7 @@ from src.agents import report_agent # Needed for history export
 load_dotenv()
 
 # --- Configuration Constants ---
-DEFAULT_TIMEOUT_SECONDS = 15 
+DEFAULT_TIMEOUT_SECONDS = 180 # Increased timeout for external API calls
 
 # --- FastAPI App Setup ---
 
@@ -67,22 +67,23 @@ async def analyze_single_asset(
     
     try:
         # Pass the mock data and commentary flags to the pipeline
-        data = await asyncio.wait_for(
-            process_asset_pipeline(
-                symbol, 
-                use_mock_data=use_mock_data, 
-                include_commentary=include_commentary
-            ), 
-            timeout=DEFAULT_TIMEOUT_SECONDS
+        pipeline_coroutine = process_asset_pipeline( 
+            symbol, 
+            use_mock_data=use_mock_data, 
+            include_commentary=include_commentary
         )
-    except asyncio.TimeoutError:
-         raise HTTPException(status_code=status.HTTP_504_GATEWAY_TIMEOUT, detail=f"Analysis timed out after {DEFAULT_TIMEOUT_SECONDS} seconds.")
+
+        # Removed asyncio.wait_for due to potential indefinite hang when external APIs are slow
+        data = await pipeline_coroutine 
+        
+    except Exception as e:
+        # Catch any underlying exception (like network error or unhandled internal error)
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+                            detail=f"Analysis failed due to internal error: {e.__class__.__name__}: {str(e)}")
     
     # Check for pipeline-internal errors (e.g., data fetch failed)
     if data.get('Signal') == 'ERROR':
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=data.get('ai_comment', "Internal error during analysis."))
-    
-    # No need for separate LLM call here; the pipeline handles it based on include_commentary flag.
     
     return data
 
@@ -158,7 +159,7 @@ async def analyze_user_feedback(feedback: str) -> Dict[str, Any]:
     if not feedback or len(feedback) < 10:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Feedback text must be provided and substantial.")
         
-    result = await ai_agent.analyze_feedback(feedback)
+    result = await asyncio.to_thread(ai_agent.analyze_feedback, feedback) 
     return result
 
 # ----------------------------------------------------
