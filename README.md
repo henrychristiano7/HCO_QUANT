@@ -1,5 +1,7 @@
 📊 HCO Quant AI Platform: Agentic Financial & Threat Intelligence Dashboard
+
 🌟 Project Overview
+
 HCO Quant is a high-performance, agentic platform that provides real-time quantitative trading signals alongside human-readable AI commentary and integrates Threat Intelligence for robust security awareness. Built for speed and modularity, the system uses concurrent processing to analyze multiple stock symbols (ETFs, Stocks, etc.) and generate actionable insights in seconds.
 
 The project demonstrates the stable integration of mandatory hackathon technologies (Jac ecosystem via byLLM) with production-grade backend and frontend frameworks.
