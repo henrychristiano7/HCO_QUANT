@@ -1,12 +1,13 @@
-📊 HCO Quant AI Platform: Agentic Financial & Threat Intelligence Dashboard
+# 📊 HCO Quant AI Platform: Agentic Financial & Threat Intelligence Dashboard
 
-🌟 Project Overview
+# 🌟 Project Overview
 
 HCO Quant is a high-performance, agentic platform that provides real-time quantitative trading signals alongside human-readable AI commentary and integrates Threat Intelligence for robust security awareness. Built for speed and modularity, the system uses concurrent processing to analyze multiple stock symbols (ETFs, Stocks, etc.) and generate actionable insights in seconds.
 
 The project demonstrates the stable integration of mandatory hackathon technologies (Jac ecosystem via byLLM) with production-grade backend and frontend frameworks.
 
-🚀 Key Features
+# 🚀 Key Features
+
 Concurrent Quant Analysis: Asynchronously processes signals for multiple symbols simultaneously, drastically reducing latency.
 
 AI Commentary (Powered by byLLM): Generates natural language insights and rationale for every trading signal, providing context beyond raw metrics.
@@ -17,8 +18,10 @@ Threat Intelligence Integration: A dedicated API endpoint integrates with VirusT
 
 Flexible Data Toggles: Frontend switches allow users to easily toggle between Mock Data (for fast testing) and Real Data, and to enable/disable the resource-intensive LLM Commentary.
 
-💻 Tech Stack
+# 💻 Tech Stack
+
 Component	Technology	Role	Compliance
+
 Agentic Logic	byLLM (Built on Jac)	Orchestration of complex LLM calls and structured output generation.	MANDATORY
 Backend API	FastAPI (Python 3.12)	High-performance, asynchronous server handling concurrency.	
 Concurrency	asyncio (Python 3.12)	Enables non-blocking, simultaneous execution of multiple symbol analyses.	
@@ -27,7 +30,7 @@ Database	SQLite	Local database for storing the trade_history log.
 
 Export to Sheets
 
-⚙️ Installation and Setup
+# ⚙️ Installation and Setup
 1. Backend Setup
 The backend requires Python 3.10+ and uses a virtual environment (venv).
 
@@ -78,11 +81,14 @@ npm install
 npm run dev
 The application will be accessible at http://localhost:3000.
 
-👨‍💻 Usage and Endpoints
+# 👨‍💻 Usage and Endpoints
+
 The core interaction happens through the frontend dashboard at http://localhost:3000.
 
 Core API Endpoints (Backend)
+
 Method	Endpoint	Description
+
 GET	/analyze/multi	Runs the full concurrent analysis pipeline for multiple symbols.
 GET	/utility/threat_intel	Queries VirusTotal for URL or file hash safety data.
 GET	/export/history/xlsx	Downloads the full trade history log as an Excel file.
@@ -90,7 +96,8 @@ GET	/docs	OpenAPI documentation (Swagger UI).
 
 Export to Sheets
 
-Demo Instructions
+# Demo Instructions
+
 Open the dashboard in your browser.
 
 Initial Run: Ensure "Use Mock Data" and "Include LLM Commentary" are checked. Click "RUN QUANT ANALYSIS". This should complete quickly and demonstrate both the signal generation and the LLM output.
