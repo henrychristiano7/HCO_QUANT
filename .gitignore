@@ -1,0 +1,12 @@
+# Python dependencies
+venv/
+__pycache__/
+*.pyc
+*.log
+
+# Frontend dependencies
+/frontend/node_modules/
+/frontend/dist/
+
+# Configuration and Secrets
+.env

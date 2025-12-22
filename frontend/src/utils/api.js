@@ -21,10 +21,37 @@ export const fetchMultiAnalysis = async ({ symbols, useMockData, includeCommenta
                 include_commentary: includeCommentary,
             },
         });
-        return response.data.symbols || [];
+        
+        // CRITICAL: Extracts the list from the expected backend wrapper: {"symbols": [...]}.
+        return response.data.symbols || []; 
+        
     } catch (error) {
         console.error('Error fetching multi-analysis:', error.response ? error.response.data : error.message);
         throw new Error('Failed to fetch data. Check API status.');
+    }
+};
+
+/**
+ * Analyzes user feedback text using the LLM agent (POST request).
+ * @param {string} feedbackText - The text provided by the user.
+ * @returns {Promise<Object>} - Structured analysis (sentiment, category, summary).
+ */
+export const analyzeUserFeedback = async (feedbackText) => {
+    try {
+        // Sends the feedback text as a query parameter in a POST request, matching the FastAPI endpoint setup.
+        const response = await axios.post(
+            `${API_BASE_URL}/utility/feedback_analysis`, 
+            null, // Body is null as data is sent via params
+            {
+                params: {
+                    feedback: feedbackText 
+                }
+            }
+        );
+        return response.data;
+    } catch (error) {
+        console.error('Error analyzing feedback:', error.response ? error.response.data : error.message);
+        throw new Error('Feedback analysis failed. Check API status and payload.');
     }
 };
 
@@ -39,9 +66,11 @@ export const fetchThreatReport = async ({ checkValue, checkType }) => {
                 check_type: checkType,
             },
         });
-        // Simplification: Return true if no malicious detections found in the summary stats
+        
+        // Simplification: Extracts security statistics
         const stats = response.data.data.attributes.last_analysis_stats;
         const isMalicious = stats.malicious > 0 || stats.suspicious > 0;
+        
         return { 
             isMalicious,
             reportUrl: `https://www.virustotal.com/${checkType}/${checkValue}`,
