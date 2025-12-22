@@ -10,3 +10,8 @@ __pycache__/
 
 # Configuration and Secrets
 .env
+backend/.env
+backend/venv/
+backend/.jaseci_logs
+__jac_gen__/
+*.jabc
