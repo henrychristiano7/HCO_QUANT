@@ -2,106 +2,106 @@
 
 # 🌟 Project Overview
 
-HCO Quant is a high-performance, agentic platform that provides real-time quantitative trading signals alongside human-readable AI commentary and integrates Threat Intelligence for robust security awareness. Built for speed and modularity, the system uses concurrent processing to analyze multiple stock symbols (ETFs, Stocks, etc.) and generate actionable insights in seconds.
+**HCO-Quant** is a high-performance, agentic platform built on **Jaseci 2.0 (Jaclang)**. It provides real-time quantitative trading signals, human-readable AI commentary, and integrated Threat Intelligence.
 
-The project demonstrates the stable integration of mandatory hackathon technologies (Jac ecosystem via byLLM) with production-grade backend and frontend frameworks.
+By utilizing Jaseci's **Object-Spatial Mapping**, the system orchestrates "Walkers" (Agents) that traverse a graph to perform complex financial analysis and security scans. This version represents a **Pure Jaseci implementation**, where the core intelligence and orchestration live entirely within `.jac` and `.jir` files.
 
 # 🚀 Key Features
 
-Concurrent Quant Analysis: Asynchronously processes signals for multiple symbols simultaneously, drastically reducing latency.
-
-AI Commentary (Powered by byLLM): Generates natural language insights and rationale for every trading signal, providing context beyond raw metrics.
-
-Financial Data Agent: Fetches historical OHLCV data for analysis (or uses Mock Data for testing).
-
-Threat Intelligence Integration: A dedicated API endpoint integrates with VirusTotal via a dedicated agent to check the safety of URLs or file hashes.
-
-Flexible Data Toggles: Frontend switches allow users to easily toggle between Mock Data (for fast testing) and Real Data, and to enable/disable the resource-intensive LLM Commentary.
+* **Agentic Graph Orchestration:** Uses Jaseci Walkers (`AssetOrchestrator`) to manage analysis logic as a traversal of data nodes.
+* **AI Commentary (Powered by byLLM):** Direct integration within the Jac layer to generate natural language insights for every trading signal.
+* **Threat Intelligence Agent:** A dedicated Jaseci Walker (`SecurityScanner`) that evaluates the safety of URLs and digital assets.
+* **High-Speed Execution:** Built on Jaclang 0.9.x, leveraging the speed of the Jac Intermediate Representation (`.jir`) for near-instant agent deployment.
+* **Decoupled Architecture:** A clean separation between the Backend Logic (`main.jac`) and the Client Interface (`app.jac`).
 
 # 💻 Tech Stack
 
-Component	Technology	Role	Compliance
-
-Agentic Logic	byLLM (Built on Jac)	Orchestration of complex LLM calls and structured output generation.	MANDATORY
-Backend API	FastAPI (Python 3.12)	High-performance, asynchronous server handling concurrency.	
-Concurrency	asyncio (Python 3.12)	Enables non-blocking, simultaneous execution of multiple symbol analyses.	
-Frontend UI	React & Vite	Fast, modern, and interactive dashboard for visualizing results.	
-Database	SQLite	Local database for storing the trade_history log.	
-
-Export to Sheets
+| Component | Technology | Role |
+| --- | --- | --- |
+| **Agentic Logic** | **Jaclang (Jaseci 2.0)** | Defines Walkers, Nodes, and Graph logic. |
+| **Orchestration** | **byLLM** | Powers the AI-driven rationale within the Walkers. |
+| **Runtime** | **Python 3.12 (venv)** | The underlying engine for Jaclang execution. |
+| **Data Format** | **JIR (.jir)** | Pre-compiled Jac Intermediate Representation for fast loading. |
 
 # ⚙️ Installation and Setup
-1. Backend Setup
-The backend requires Python 3.10+ and uses a virtual environment (venv).
 
-Bash
+### 1. Environment Preparation
 
-# Navigate to the backend directory
-cd ~/HCO-Quant/backend
+The system requires Python 3.10+ and the Jaclang compiler.
+
+```bash
+# Navigate to the project root
+cd ~/HCO-Quant
 
 # Create and activate the virtual environment
 python3 -m venv venv
 source venv/bin/activate
 
-# Install dependencies (ensure requirements.txt is up-to-date)
-pip install -r requirements.txt
+# Install Jaclang and byLLM
+pip install jaclang byllm
 
-# Create the initial database file
-python -c 'from src.database import setup_db; setup_db()'
-Environment Variables (.env file)
-You must create a .env file in the ~/HCO-Quant/backend directory with your API keys:
+```
 
-Bash
+### 2. Compilation (The Build Layer)
 
+To ensure maximum speed, we compile the Jaseci backend into an intermediate representation:
+
+```bash
+# Set PYTHONPATH so the compiler can resolve internal paths
+export PYTHONPATH=$PYTHONPATH:$(pwd)
+
+# Compile the main orchestrator
+jac build backend/src/jac/main.jac
+
+```
+
+### 3. Environment Variables
+
+Ensure your `.env` file exists in the root directory (but is ignored by git) to power the AI agents:
+
+```bash
 # .env
-# Required for LLM Commentary
 GEMINI_API_KEY="YOUR_GEMINI_API_KEY_HERE"
-
-# Required for Threat Intel Agent
 VIRUSTOTAL_API_KEY="YOUR_VIRUSTOTAL_API_KEY_HERE"
-2. Run the Backend
-Start the FastAPI server using Uvicorn:
 
-Bash
+```
 
-# (Ensure venv is active)
-uvicorn src.api.hco_quant_api:app --host 127.0.0.1 --port 8000
-3. Frontend Setup
-The frontend uses Node.js and npm.
+# 👨‍💻 Usage and Execution
 
-Bash
+### Running the Agentic Client
 
-# Navigate to the frontend directory
-cd ~/HCO-Quant/frontend
+The primary way to interact with the platform is via the Jaseci Client:
 
-# Install Node dependencies
-npm install
+```bash
+# Run the client walker
+jac run frontend/src/app.jac
 
-# Run the frontend development server
-npm run dev
-The application will be accessible at http://localhost:3000.
+```
 
-# 👨‍💻 Usage and Endpoints
+### Project Structure (Cleaned)
 
-The core interaction happens through the frontend dashboard at http://localhost:3000.
+```text
+HCO-Quant/
+├── backend/
+│   └── src/
+│       └── jac/
+│           ├── main.jac  <-- Master Orchestrator (Walkers & Nodes)
+│           └── main.jir  <-- Compiled Agentic Logic
+└── frontend/
+    └── src/
+        └── app.jac       <-- Client UI / Entry Point
 
-Core API Endpoints (Backend)
+```
 
-Method	Endpoint	Description
+# 🛡️ Security & Integrity
 
-GET	/analyze/multi	Runs the full concurrent analysis pipeline for multiple symbols.
-GET	/utility/threat_intel	Queries VirusTotal for URL or file hash safety data.
-GET	/export/history/xlsx	Downloads the full trade history log as an Excel file.
-GET	/docs	OpenAPI documentation (Swagger UI).
+* **Zero-Leak Policy:** `.env`, `venv/`, and `.jaseci_logs` are strictly untracked via `.gitignore`.
+* **Graph Isolation:** Data nodes (`Asset`) are encapsulated within the Jaseci graph, ensuring no raw financial data exposure.
 
-Export to Sheets
+# 🏁 Demo Instructions
 
-# Demo Instructions
+1. **Start the Client:** Run `jac run frontend/src/app.jac`.
+2. **Phase 1 (Quant):** Observe the `AssetOrchestrator` spawning for symbols like AAPL and TSLA. It will generate signals and AI commentary within the terminal.
+3. **Phase 2 (Threat Intel):** Watch the `SecurityScanner` evaluate the safety of the configured test URLs.
+4. **Graph Verification:** The output will confirm "Graph Persistence," meaning data has been successfully saved to the Jaseci memory layer.
 
-Open the dashboard in your browser.
-
-Initial Run: Ensure "Use Mock Data" and "Include LLM Commentary" are checked. Click "RUN QUANT ANALYSIS". This should complete quickly and demonstrate both the signal generation and the LLM output.
-
-Real Data Showcase: Uncheck "Use Mock Data" and run again. This demonstrates the stability of the concurrent API calls under real-world latency.
-
-Threat Intel: Paste a known malicious hash (e.g., 51a24d8641470e28f352109869a25b290196230f) into the Threat Checker and scan it to show the agent's detection capabilities.
