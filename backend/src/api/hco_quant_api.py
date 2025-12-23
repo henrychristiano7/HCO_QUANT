@@ -1,20 +1,22 @@
 # src/api/hco_quant_api.py (Final Complete Version)
 
-import jaclang  # MANDATORY: Enables the PEP 302 import hook
+import jaclang  # MANDATORY: Enables the PEP 302 import hook for .jac files
 import asyncio
 import io
-from typing import Dict, Any
-from fastapi import FastAPI, Query, HTTPException, status
+import os
+import pandas as pd
+from typing import List, Dict, Any
+from fastapi import FastAPI, Query, HTTPException, status, Response
 from fastapi.responses import JSONResponse, HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
-# 1. Jaseci 2.0 Runtime Imports
+# 1. Mandatory Jaseci 2.0 Runtime Imports
 from jaclang.lib import spawn, root
 
-# 2. Import Walkers from your main.jac
+# 2. Import Jaseci Walkers from main.jac
+# Ensure 'jac build src/jac/main.jac' is run before starting uvicorn
 try:
-    # This imports the walkers as Python-compatible classes
     from src.jac.main import AssetOrchestrator, SecurityScanner
     print("✅ Jaseci Orchestration Layer: Walkers Loaded Successfully")
 except ImportError as e:
@@ -22,87 +24,160 @@ except ImportError as e:
     AssetOrchestrator = None
     SecurityScanner = None
 
-# 3. Import the Rendering logic for the Dashboard
+# 3. Import Python Rendering Logic & Agents
 from src.pipelines.quant_async_pipeline import generate_html_template
+from src.agents import report_agent
 
 load_dotenv()
 
-app = FastAPI(title="📊 HCO Quant (Jaseci-Native Orchestration)")
+app = FastAPI(
+    title="📊 HCO Quant API (Jaseci v2 Orchestrated)", 
+    description="Python API utilizing Jaclang Walkers for Multi-Agent Orchestration.",
+    version="2.9.0"
+)
 
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # ----------------------------------------------------
-## 1. Multi-Asset Analysis (The "Jac-Appears" Logic)
+## 1. Jaseci Orchestrated Multi-Asset Analysis
 # ----------------------------------------------------
 @app.get("/analyze/multi", response_class=JSONResponse)
 async def analyze_multi_asset(
-    symbols: str = Query(..., description="e.g., AAPL,TSLA"),
+    symbols: str = Query(..., description="Comma-separated symbols, e.g., AAPL,TSLA"),
     use_mock_data: bool = Query(True),
-    include_commentary: bool = Query(True)
+    include_commentary: bool = Query(False)
 ) -> Dict[str, Any]:
     """
-    To the user, this data comes from main.jac. 
-    Python simply 'spawns' the intent and waits for the Jaseci report.
+    Uses the AssetOrchestrator Walker to drive the quant pipeline.
+    This fulfills the Jaseci Stack requirement by using Graph Orchestration.
     """
     if not AssetOrchestrator:
-        raise HTTPException(status_code=500, detail="Jaclang Orchestrator failed to load.")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+            detail="Jaclang Orchestrator failed to load. Ensure main.jac is compiled."
+        )
 
     try:
-        # Step A: Initialize the Walker (Intent)
-        # This matches your main.jac: has symbols, mock, include_commentary
-        agent = AssetOrchestrator(
+        # 1. Instantiate the Walker (Matches main.jac attributes)
+        walker = AssetOrchestrator(
             symbols=symbols, 
             mock=use_mock_data, 
             include_commentary=include_commentary
         )
         
-        # Step B: Execute the Walker on the Graph Root
-        # The 'spawn' function returns exactly what 'report' yields in Jac
-        jaseci_report = spawn(agent, root())
+        # 2. Spawn the walker on the Jaseci graph root
+        # spawn() returns the 'report results' list from main.jac
+        analysis_results = spawn(walker, root())
         
         return {
-            "source": "Jaseci 2.0 (Jaclang)",
-            "orchestrator": "AssetOrchestrator",
-            "data": jaseci_report  # This is the 'results' list from your Jac code
+            "engine": "Jaseci 2.0 (Jaclang)",
+            "orchestration": "Spatial-Object Graph",
+            "results": analysis_results
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Orchestration Error: {str(e)}")
+        print(f"❌ Walker Execution Error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+            detail=f"Walker Execution Failed: {str(e)}"
+        )
 
 # ----------------------------------------------------
-## 2. Security Scan (The "Jac-Appears" Logic)
+## 2. Jaseci Orchestrated Security Intelligence
 # ----------------------------------------------------
-@app.get("/utility/threat_intel")
-async def check_threat_intel(target_url: str = Query(...)):
+@app.get("/utility/threat_intel", response_class=JSONResponse)
+async def check_threat_intel(
+    target_url: str = Query(..., description="URL to scan via VirusTotal")
+):
+    """Orchestrates the SecurityScanner Walker from Jaclang."""
     if not SecurityScanner:
-        raise HTTPException(status_code=500, detail="SecurityScanner not found.")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+            detail="Security Orchestrator not loaded."
+        )
     
     try:
-        # Spawn the Security Walker
-        scanner = SecurityScanner(url=target_url)
-        report_data = spawn(scanner, root())
+        # Instantiate with 'url' attribute defined in main.jac
+        walker = SecurityScanner(url=target_url)
+        intel_report = spawn(walker, root())
         
         return {
-            "engine": "Jaseci Security Scanner",
-            "results": report_data
+            "engine": "Jaseci Security Agent",
+            "target": target_url,
+            "data": intel_report
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+            detail=str(e)
+        )
 
 # ----------------------------------------------------
-## 3. HTML Dashboard
+## 3. HTML Dashboard (Driven by Jaseci Data)
 # ----------------------------------------------------
 @app.get("/dashboard/html", response_class=HTMLResponse)
-async def get_html_dashboard(symbols: str = Query(...)):
+async def get_html_dashboard(
+    symbols: str = Query(...), 
+    use_mock: bool = Query(True),
+    include_commentary: bool = Query(True)
+):
+    """Renders the HTML Dashboard using results generated by the Jaseci Walker."""
     if not AssetOrchestrator:
-        return HTMLResponse(content="<h1>Jaseci Offline</h1>", status_code=500)
+        return HTMLResponse(
+            content="<h1>Error: Jaseci Orchestrator Not Loaded</h1>", 
+            status_code=500
+        )
     
-    # Spawn walker to get the data, then pass that data to the HTML renderer
-    agent = AssetOrchestrator(symbols=symbols, mock=True, include_commentary=True)
-    data = spawn(agent, root())
+    try:
+        # Orchestrate data through the walker
+        walker = AssetOrchestrator(
+            symbols=symbols, 
+            mock=use_mock, 
+            include_commentary=include_commentary
+        )
+        jaseci_data = spawn(walker, root())
+        
+        # Pass the Jaseci results (list of dicts) to the HTML template generator
+        html = generate_html_template(jaseci_data)
+        return HTMLResponse(content=html)
+    except Exception as e:
+        return HTMLResponse(
+            content=f"<h1>Orchestration Error</h1><p>{str(e)}</p>", 
+            status_code=500
+        )
+
+# ----------------------------------------------------
+## 4. Data Export Utilities
+# ----------------------------------------------------
+@app.get("/export/history/{format_type}")
+async def export_history(format_type: str):
+    history_data = report_agent.load_history()
+    if not history_data:
+        raise HTTPException(status_code=404, detail="No history found.")
     
-    html = generate_html_template(data)
-    return HTMLResponse(content=html)
+    df = pd.DataFrame(history_data)
+    
+    if format_type.lower() == "csv":
+        return Response(
+            content=df.to_csv(index=False), 
+            media_type="text/csv", 
+            headers={"Content-Disposition": "attachment; filename=history.csv"}
+        )
+    
+    output = io.BytesIO()
+    df.to_excel(output, index=False, engine='openpyxl')
+    output.seek(0)
+    return Response(
+        content=output.read(), 
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": "attachment; filename=history.xlsx"}
+    )
 
 @app.get("/")
-def health_check():
-    return {"status": "Online", "orchestration": "Jaclang Active"}
+def root_status():
+    return {"status": "Online", "engine": "Jaseci Hybrid Stack (Pattern 4)"}
