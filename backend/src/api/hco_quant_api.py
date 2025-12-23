@@ -31,7 +31,7 @@ from src.agents import report_agent
 load_dotenv()
 
 app = FastAPI(
-    title="📊 HCO Quant API (Jaseci v2 Orchestrated)", 
+    title="📊 HCO Quant API (Jaseci-Native Orchestration)", 
     description="Python API utilizing Jaclang Walkers for Multi-Agent Orchestration.",
     version="2.9.0"
 )
